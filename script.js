@@ -46,6 +46,52 @@ document.addEventListener('DOMContentLoaded', function() {
         e.target.value = e.target.value.replace(/\D/g, '');
     });
     
+    // Máscara para data de nascimento (formato DD/MM/AAAA)
+    nascimentoInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        
+        if (value.length <= 8) {
+            // Formatar como DD/MM/AAAA
+            if (value.length > 4) {
+                value = value.replace(/(\d{2})(\d{2})(\d{0,4})/, '$1/$2/$3');
+            } else if (value.length > 2) {
+                value = value.replace(/(\d{2})(\d{0,2})/, '$1/$2');
+            }
+            e.target.value = value;
+        }
+    });
+    
+    // Função para validar data de nascimento
+    function validateDate(dateStr) {
+        // Verificar o formato DD/MM/AAAA
+        const regex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+        const matches = dateStr.match(regex);
+        
+        if (!matches) return false;
+        
+        const day = parseInt(matches[1], 10);
+        const month = parseInt(matches[2], 10) - 1; // Meses em JS são de 0-11
+        const year = parseInt(matches[3], 10);
+        
+        // Criar objeto de data e verificar se é válida
+        const date = new Date(year, month, day);
+        
+        // Verificar se a data é válida e se está no passado
+        const today = new Date();
+        return (
+            date.getDate() === day &&
+            date.getMonth() === month &&
+            date.getFullYear() === year &&
+            date <= today
+        );
+    }
+    
+    // Função para converter data no formato DD/MM/AAAA para AAAA-MM-DD
+    function convertToISODate(dateStr) {
+        const parts = dateStr.split('/');
+        return `${parts[2]}-${parts[1]}-${parts[0]}`;
+    }
+    
     // Função para validar CPF
     function validateCPF(cpf) {
         cpf = cpf.replace(/[^\d]/g, '');
@@ -162,6 +208,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (nascimentoInput.value === '') {
             setError(nascimentoInput, 'Data de nascimento é obrigatória');
             isValid = false;
+        } else if (!validateDate(nascimentoInput.value)) {
+            setError(nascimentoInput, 'Data de nascimento inválida');
+            isValid = false;
         } else {
             removeError(nascimentoInput);
         }
@@ -193,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = {
                 cpf: cpfInput.value.replace(/[^\d]/g, ''),
                 matricula: matriculaInput.value,
-                nascimento: nascimentoInput.value,
+                nascimento: convertToISODate(nascimentoInput.value),
                 confirmacao: confirmacaoCheckbox.checked
             };
             
