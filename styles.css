@@ -52,11 +52,13 @@ body {
     padding: 1rem;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    flex-wrap: wrap;
 }
 
 .title-logo {
     height: 50px;
     margin-right: 1rem;
+    flex-shrink: 0;
 }
 
 .title {
@@ -67,6 +69,9 @@ body {
     margin-bottom: 0;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     letter-spacing: 0.5px;
+    word-wrap: break-word;
+    hyphens: auto;
+    flex: 1;
 }
 
 .subtitle {
@@ -442,13 +447,40 @@ select.form-control {
     100% { transform: rotate(360deg); }
 }
 
+@media (min-width: 577px) and (max-width: 768px) {
+    .title-container {
+        padding: 1rem;
+    }
+    
+    .title {
+        font-size: 1.2rem;
+    }
+    
+    .title-logo {
+        height: 45px;
+    }
+}
+
 @media (max-width: 576px) {
     .card {
         padding: 1.5rem 1rem;
     }
     
+    .title-container {
+        padding: 0.8rem;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .title-logo {
+        margin-right: 0;
+        margin-bottom: 0.8rem;
+    }
+    
     .title {
-        font-size: 1.6rem;
+        font-size: 1.1rem;
+        text-align: center;
     }
     
     .subtitle {
