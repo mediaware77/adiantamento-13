@@ -369,6 +369,7 @@ document.addEventListener('DOMContentLoaded', function() {
             cancelModalYes.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelando...';
 
             // URL para cancelamento
+            const cancelUrl = 'https://n8n-dti-isp.campinagran.de/webhook/a06efbf4-4462-4fec-aaa7-d3a2e7ec57a4';
             const cancelUrl = 'https://n8n-dti-isp.campinagran.de/webhook-test/a06efbf4-4462-4fec-aaa7-d3a2e7ec57a4';
             
             // Preparar os parâmetros para a requisição GET
