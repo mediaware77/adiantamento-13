@@ -355,16 +355,32 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
+        // Validar se os dados estão completos
+        if (!cancelRequestData.cpf || !cancelRequestData.matricula || !cancelRequestData.nascimento) {
+            console.error('Dados incompletos para cancelamento:', cancelRequestData);
+            showMessage(errorMessage, 'Dados incompletos. Por favor, preencha todos os campos antes de cancelar.');
+            cancelModalOverlay.classList.remove('show');
+            return;
+        }
+
         try {
             // Desabilitar o botão durante o processo
             cancelModalYes.disabled = true;
             cancelModalYes.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelando...';
 
             // URL para cancelamento
-            const cancelUrl = 'https://n8n-dti-isp.campinagran.de/webhook/a06efbf4-4462-4fec-aaa7-d3a2e7ec57a4';
+            const cancelUrl = 'https://n8n-dti-isp.campinagran.de/webhook-test/a06efbf4-4462-4fec-aaa7-d3a2e7ec57a4';
             
             // Preparar os parâmetros para a requisição GET
             const urlParams = new URLSearchParams({
+                cpf: cancelRequestData.cpf,
+                matricula: cancelRequestData.matricula,
+                'data de nascimento': cancelRequestData.nascimento
+            });
+
+            // Log para debug
+            console.log('URL de cancelamento:', `${cancelUrl}?${urlParams.toString()}`);
+            console.log('Dados enviados:', {
                 cpf: cancelRequestData.cpf,
                 matricula: cancelRequestData.matricula,
                 'data de nascimento': cancelRequestData.nascimento
@@ -377,6 +393,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     'Authorization': 'Basic ' + btoa('cybergit2077:R83Y3CAN1G6I6C05QBEK@qo')
                 }
             });
+
+            console.log('Status da resposta:', response.status);
+            console.log('Resposta OK:', response.ok);
 
             // Fechar o modal
             cancelModalOverlay.classList.remove('show');
@@ -391,6 +410,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         } catch (error) {
             console.error('Erro ao cancelar solicitação:', error);
+            console.error('Tipo de erro:', error.name);
+            console.error('Mensagem de erro:', error.message);
             
             // Fechar o modal
             cancelModalOverlay.classList.remove('show');
