@@ -368,43 +368,121 @@ document.addEventListener('DOMContentLoaded', function() {
             cancelModalYes.disabled = true;
             cancelModalYes.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelando...';
 
-            // Usar o webhook principal com POST para evitar problemas de CORS
-            const webhookUrl = 'https://n8n-dti-isp.campinagran.de/webhook/e247568f-a7f3-4d80-b44a-79809313be53';
+            // Primeiro tentar a URL específica de cancelamento com POST
+            const cancelUrl = 'https://n8n-dti-isp.campinagran.de/webhook/a06efbf4-4462-4fec-aaa7-d3a2e7ec57a4';
             
-            // Preparar os dados para envio com flag de cancelamento
+            // Preparar os dados no formato que o n8n pode estar esperando
             const cancelData = {
                 cpf: cancelRequestData.cpf,
                 matricula: cancelRequestData.matricula,
-                nascimento: cancelRequestData.nascimento,
-                confirmacao: true,
-                tipoCancelamento: true,  // Flag para indicar que é um cancelamento
-                acao: 'cancelar'         // Ação específica
+                'data de nascimento': cancelRequestData.nascimento  // Usar chave com espaços como no GET original
             };
             
-            console.log('Enviando cancelamento via POST:', cancelData);
+            console.log('Tentando cancelamento via POST na URL específica:', cancelUrl);
+            console.log('Dados:', cancelData);
             
-            // Enviar os dados via POST
-            const response = await fetch(webhookUrl, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': 'Basic ' + btoa('cybergit2077:R83Y3CAN1G6I6C05QBEK@qo')
-                },
-                body: JSON.stringify(cancelData)
-            });
+            let response;
+            
+            try {
+                // Tentar primeiro sem headers de autorização
+                response = await fetch(cancelUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(cancelData)
+                });
+                
+                console.log('Resposta da URL específica - Status:', response.status);
+            } catch (error1) {
+                console.log('Erro com URL específica, tentando webhook principal...');
+                
+                // Se falhar, tentar o webhook principal
+                const webhookUrl = 'https://n8n-dti-isp.campinagran.de/webhook/e247568f-a7f3-4d80-b44a-79809313be53';
+                
+                // Preparar os dados para envio com flag de cancelamento
+                const cancelDataPrincipal = {
+                    cpf: cancelRequestData.cpf,
+                    matricula: cancelRequestData.matricula,
+                    nascimento: cancelRequestData.nascimento,
+                    confirmacao: true,
+                    tipoCancelamento: true,
+                    acao: 'cancelar'
+                };
+                
+                console.log('Enviando para webhook principal:', webhookUrl);
+                console.log('Dados:', cancelDataPrincipal);
+                
+                response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Basic ' + btoa('cybergit2077:R83Y3CAN1G6I6C05QBEK@qo')
+                    },
+                    body: JSON.stringify(cancelDataPrincipal)
+                });
+            }
 
             console.log('Status da resposta:', response.status);
+            console.log('Status Text:', response.statusText);
             console.log('Resposta OK:', response.ok);
+            
+            // Tentar ler o corpo da resposta
+            let responseData = null;
+            try {
+                const responseText = await response.text();
+                console.log('Resposta raw:', responseText);
+                if (responseText) {
+                    responseData = JSON.parse(responseText);
+                    console.log('Resposta parseada:', responseData);
+                }
+            } catch (parseError) {
+                console.log('Erro ao parsear resposta:', parseError);
+            }
 
             // Fechar o modal
             cancelModalOverlay.classList.remove('show');
 
-            if (response.ok) {
+            // Verificar a resposta com base no status e dados
+            if (response.ok || response.status === 200) {
                 // Sucesso no cancelamento
                 showMessage(successMessage, 'Sua solicitação de cancelamento foi enviada com sucesso e será processada pelo suporte. Você será notificado assim que o cancelamento for concluído.');
+            } else if (response.status === 0) {
+                // Status 0 pode indicar problema de CORS ou rede
+                console.error('Possível problema de CORS ou rede. Status: 0');
+                
+                // Tentar método alternativo simples
+                try {
+                    // Criar um form e enviá-lo
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = webhookUrl;
+                    form.target = '_blank';
+                    
+                    // Adicionar campos
+                    Object.keys(cancelData).forEach(key => {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = key;
+                        input.value = cancelData[key];
+                        form.appendChild(input);
+                    });
+                    
+                    // Adicionar ao body temporariamente
+                    document.body.appendChild(form);
+                    
+                    // Submeter e remover
+                    form.submit();
+                    setTimeout(() => document.body.removeChild(form), 100);
+                    
+                    showMessage(successMessage, 'Sua solicitação de cancelamento foi enviada. Uma nova aba foi aberta para confirmar o envio. Você será notificado quando o cancelamento for processado.');
+                } catch (formError) {
+                    console.error('Erro no envio via form:', formError);
+                    showMessage(errorMessage, 'Não foi possível enviar sua solicitação de cancelamento. Por favor, entre em contato com o setor responsável.');
+                }
             } else {
                 // Erro no cancelamento
-                showMessage(errorMessage, 'Não foi possível enviar sua solicitação de cancelamento neste momento. Por favor, tente novamente mais tarde ou entre em contato com o setor responsável.');
+                showMessage(errorMessage, `Não foi possível enviar sua solicitação de cancelamento (Status: ${response.status}). Por favor, tente novamente mais tarde ou entre em contato com o setor responsável.`);
             }
 
         } catch (error) {
