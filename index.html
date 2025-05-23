@@ -78,8 +78,9 @@
             <div class="response-message warning-message" id="warningMessage">
                 <i class="fas fa-exclamation-triangle"></i>
                 <span id="warningText"></span>
-                <div>
+                <div style="display: flex; gap: 10px; justify-content: center;">
                     <button class="btn-secondary" id="resetBtnWarning">Voltar</button>
+                    <button class="btn-secondary btn-cancel" id="cancelRequestBtn">Cancelar Solicitação</button>
                 </div>
             </div>
             
@@ -88,6 +89,24 @@
                 <span id="errorText"></span>
                 <div>
                     <button class="btn-secondary" id="resetBtnError">Tentar Novamente</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal de confirmação de cancelamento -->
+        <div class="modal-overlay" id="cancelModalOverlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Confirmar Cancelamento</h3>
+                </div>
+                <div class="modal-body">
+                    <p>Tem certeza de que deseja cancelar sua solicitação de antecipação do 13º salário?</p>
+                    <p><strong>Esta ação não pode ser desfeita.</strong></p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelModalNo">Não</button>
+                    <button class="btn btn-danger" id="cancelModalYes">Sim, Cancelar</button>
                 </div>
             </div>
         </div>

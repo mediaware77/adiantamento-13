@@ -22,6 +22,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const resetBtnWarning = document.getElementById('resetBtnWarning');
     const resetBtnError = document.getElementById('resetBtnError');
     
+    // Elementos do modal de cancelamento
+    const cancelRequestBtn = document.getElementById('cancelRequestBtn');
+    const cancelModalOverlay = document.getElementById('cancelModalOverlay');
+    const cancelModalYes = document.getElementById('cancelModalYes');
+    const cancelModalNo = document.getElementById('cancelModalNo');
+    
     // URL do webhook
     const webhookUrl = 'https://n8n-dti-isp.campinagran.de/webhook/e247568f-a7f3-4d80-b44a-79809313be53';
     
@@ -316,6 +322,94 @@ document.addEventListener('DOMContentLoaded', function() {
             // Restaurar o botão ao estado original
             submitBtn.innerHTML = originalButtonText;
             submitBtn.disabled = !confirmacaoCheckbox.checked;
+        }
+    });
+
+    // Funcionalidade do modal de cancelamento
+    // Variáveis globais para armazenar os dados do usuário para cancelamento
+    let cancelRequestData = null;
+
+    // Evento para abrir o modal de cancelamento
+    cancelRequestBtn.addEventListener('click', function() {
+        // Capturar os dados do formulário para usar no cancelamento
+        cancelRequestData = {
+            cpf: cpfInput.value.replace(/[^\d]/g, ''),
+            matricula: matriculaInput.value.trim(),
+            nascimento: convertToISODate(nascimentoInput.value)
+        };
+        
+        // Mostrar o modal
+        cancelModalOverlay.classList.add('show');
+    });
+
+    // Evento para fechar o modal (botão "Não")
+    cancelModalNo.addEventListener('click', function() {
+        cancelModalOverlay.classList.remove('show');
+        cancelRequestData = null;
+    });
+
+    // Evento para confirmar o cancelamento (botão "Sim, Cancelar")
+    cancelModalYes.addEventListener('click', async function() {
+        if (!cancelRequestData) {
+            console.error('Dados de cancelamento não encontrados');
+            return;
+        }
+
+        try {
+            // Desabilitar o botão durante o processo
+            cancelModalYes.disabled = true;
+            cancelModalYes.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelando...';
+
+            // URL para cancelamento
+            const cancelUrl = 'https://n8n-dti-isp.campinagran.de/webhook-test/a06efbf4-4462-4fec-aaa7-d3a2e7ec57a4';
+            
+            // Preparar os parâmetros para a requisição GET
+            const urlParams = new URLSearchParams({
+                cpf: cancelRequestData.cpf,
+                matricula: cancelRequestData.matricula,
+                'data de nascimento': cancelRequestData.nascimento
+            });
+
+            // Enviar a requisição GET
+            const response = await fetch(`${cancelUrl}?${urlParams.toString()}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': 'Basic ' + btoa('cybergit2077:R83Y3CAN1G6I6C05QBEK@qo')
+                }
+            });
+
+            // Fechar o modal
+            cancelModalOverlay.classList.remove('show');
+
+            if (response.ok) {
+                // Sucesso no cancelamento
+                showMessage(successMessage, 'Sua solicitação de cancelamento foi enviada com sucesso e será processada pelo suporte. Você será notificado assim que o cancelamento for concluído.');
+            } else {
+                // Erro no cancelamento
+                showMessage(errorMessage, 'Não foi possível enviar sua solicitação de cancelamento neste momento. Por favor, tente novamente mais tarde ou entre em contato com o setor responsável.');
+            }
+
+        } catch (error) {
+            console.error('Erro ao cancelar solicitação:', error);
+            
+            // Fechar o modal
+            cancelModalOverlay.classList.remove('show');
+            
+            // Mostrar mensagem de erro
+            showMessage(errorMessage, 'Ops! Ocorreu um erro ao tentar cancelar sua solicitação. Por favor, tente novamente mais tarde.');
+        } finally {
+            // Restaurar o botão
+            cancelModalYes.disabled = false;
+            cancelModalYes.innerHTML = 'Sim, Cancelar';
+            cancelRequestData = null;
+        }
+    });
+
+    // Fechar modal ao clicar fora dele
+    cancelModalOverlay.addEventListener('click', function(event) {
+        if (event.target === cancelModalOverlay) {
+            cancelModalOverlay.classList.remove('show');
+            cancelRequestData = null;
         }
     });
 });
