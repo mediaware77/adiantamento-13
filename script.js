@@ -389,10 +389,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Enviar a requisição GET
             const response = await fetch(`${cancelUrl}?${urlParams.toString()}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': 'Basic ' + btoa('cybergit2077:R83Y3CAN1G6I6C05QBEK@qo')
-                }
+                method: 'GET'
             });
 
             console.log('Status da resposta:', response.status);
@@ -417,7 +414,36 @@ document.addEventListener('DOMContentLoaded', function() {
             // Fechar o modal
             cancelModalOverlay.classList.remove('show');
             
-            // Mostrar mensagem de erro
+            // Verificar se é erro de CORS
+            if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                // Tentar alternativa: enviar os dados via POST para o webhook principal
+                console.log('Tentando método alternativo devido a erro de CORS...');
+                
+                try {
+                    const webhookUrl = 'https://n8n-dti-isp.campinagran.de/webhook/e247568f-a7f3-4d80-b44a-79809313be53';
+                    const response = await fetch(webhookUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Basic ' + btoa('cybergit2077:R83Y3CAN1G6I6C05QBEK@qo')
+                        },
+                        body: JSON.stringify({
+                            ...cancelRequestData,
+                            acao: 'cancelar',
+                            tipoCancelamento: true
+                        })
+                    });
+                    
+                    if (response.ok) {
+                        showMessage(successMessage, 'Sua solicitação de cancelamento foi enviada com sucesso e será processada pelo suporte. Você será notificado assim que o cancelamento for concluído.');
+                        return;
+                    }
+                } catch (altError) {
+                    console.error('Erro no método alternativo:', altError);
+                }
+            }
+            
+            // Mostrar mensagem de erro genérica
             showMessage(errorMessage, 'Ops! Ocorreu um erro ao tentar cancelar sua solicitação. Por favor, tente novamente mais tarde.');
         } finally {
             // Restaurar o botão
